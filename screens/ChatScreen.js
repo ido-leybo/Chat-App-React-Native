@@ -14,20 +14,6 @@ import { GiftedChat } from "react-native-gifted-chat";
 const ChatScreen = ({ navigation }) => {
   const [messages, setMessages] = useState([]);
 
-  //   useEffect(() => {
-  //     setMessages([
-  //       {
-  //         _id: 1,
-  //         text: "Hello developer",
-  //         createdAt: new Date(),
-  //         user: {
-  //           _id: 2,
-  //           name: "React Native",
-  //           avatar: "https://placeimg.com/140/140/any",
-  //         },
-  //       },
-  //     ]);
-  //   }, []);
   useLayoutEffect(() => {
     const unsubscribe = db
       .collection("chats")
@@ -39,6 +25,8 @@ const ChatScreen = ({ navigation }) => {
             createdAt: doc.data().createdAt.toDate(),
             text: doc.data().text,
             user: doc.data().user,
+            sent: true,
+            received: true,
           }))
         )
       );
@@ -49,6 +37,7 @@ const ChatScreen = ({ navigation }) => {
     setMessages((previousMessages) =>
       GiftedChat.append(previousMessages, messages)
     );
+
     const { _id, createdAt, text, user } = messages[0];
     db.collection("chats").add({
       _id,
@@ -57,6 +46,7 @@ const ChatScreen = ({ navigation }) => {
       user,
     });
   }, []);
+
   useLayoutEffect(() => {
     navigation.setOptions({
       headerLeft: () => (
@@ -95,6 +85,7 @@ const ChatScreen = ({ navigation }) => {
       })
       .catch((error) => {
         // An error happened.
+        console.log(error);
       });
   };
 
@@ -107,6 +98,50 @@ const ChatScreen = ({ navigation }) => {
         _id: auth?.currentUser?.email,
         name: auth?.currentUser?.displayName,
         avatar: auth?.currentUser?.photoURL,
+      }}
+      renderUsernameOnMessage={true}
+      alwaysShowSend={true}
+      onLongPress={(context, message) => {
+        if (message.text) {
+          const options = ["Copy text", "Delete message", "Cancel"];
+          const cancelButtonIndex = options.length - 1;
+          context.actionSheet().showActionSheetWithOptions(
+            {
+              options,
+              cancelButtonIndex,
+            },
+            (buttonIndex) => {
+              switch (buttonIndex) {
+                case 0:
+                  Clipboard.setString(message.text);
+                  break;
+                case 1:
+                  db.collection("chats")
+                    .where("_id", "==", message._id)
+                    .get()
+                    .then(function (querySnapshot) {
+                      querySnapshot.forEach(function (doc) {
+                        db.collection("chats")
+                          .doc(doc.id)
+                          .delete()
+                          .then(() => {
+                            console.log("Document successfully deleted!");
+                          })
+                          .catch((error) => {
+                            console.error("Error removing document: ", error);
+                          });
+                      });
+                    })
+                    .catch(function (error) {
+                      console.log("Error getting documents: ", error);
+                    });
+                default:
+                  console.log("not matched");
+                  break;
+              }
+            }
+          );
+        }
       }}
     />
   );
