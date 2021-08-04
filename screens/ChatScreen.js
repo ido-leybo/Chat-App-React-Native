@@ -33,27 +33,14 @@ const ChatScreen = ({ navigation }) => {
     return unsubscribe;
   }, []);
 
-  const onSend = useCallback((messages = []) => {
-    setMessages((previousMessages) =>
-      GiftedChat.append(previousMessages, messages)
-    );
-
-    const { _id, createdAt, text, user } = messages[0];
-    db.collection("chats").add({
-      _id,
-      createdAt,
-      text,
-      user,
-    });
-  }, []);
-
   useLayoutEffect(() => {
     navigation.setOptions({
       headerLeft: () => (
-        <View
+        <TouchableOpacity
           style={{
             marginLeft: 20,
           }}
+          onPress={() => navigation.navigate("Profile-Image")}
         >
           <Avatar
             rounded
@@ -61,7 +48,7 @@ const ChatScreen = ({ navigation }) => {
               uri: auth?.currentUser?.photoURL,
             }}
           />
-        </View>
+        </TouchableOpacity>
       ),
       headerRight: () => (
         <TouchableOpacity
@@ -73,6 +60,20 @@ const ChatScreen = ({ navigation }) => {
           <AntDesign name="logout" size={24} color="black" />
         </TouchableOpacity>
       ),
+    });
+  }, []);
+
+  const onSend = useCallback((messages = []) => {
+    setMessages((previousMessages) =>
+      GiftedChat.append(previousMessages, messages)
+    );
+
+    const { _id, createdAt, text, user } = messages[0];
+    db.collection("chats").add({
+      _id,
+      createdAt,
+      text,
+      user,
     });
   }, []);
 

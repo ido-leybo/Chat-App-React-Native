@@ -25,6 +25,7 @@ const LoginScreen = ({ navigation }) => {
     });
     return unsubscribe;
   }, []);
+
   return (
     <View style={styles.container}>
       <Input

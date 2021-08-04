@@ -1,13 +1,14 @@
 import React, { useState } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
 import { Input, Button } from "react-native-elements";
 import { auth } from "../firebase";
+import * as ImagePicker from 'expo-image-picker';
 
 const RegisterScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const register = () => {
     auth
@@ -17,8 +18,8 @@ const RegisterScreen = ({ navigation }) => {
         user
           .updateProfile({
             displayName: name,
-            photoURL: imageUrl
-              ? imageUrl
+            photoURL: selectedImage
+              ? selectedImage
               : "https://st3.depositphotos.com/4111759/13425/v/600/depositphotos_134255710-stock-illustration-avatar-vector-male-profile-gray.jpg",
           })
           .then(() => {
@@ -33,6 +34,24 @@ const RegisterScreen = ({ navigation }) => {
         alert(errorMessage);
       });
   };
+
+  const openImagePickerAsync = async () => {
+    let permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      alert("Permission to access camera roll is required!");
+      return;
+    }
+
+    let pickerResult = await ImagePicker.launchImageLibraryAsync();
+    console.log(pickerResult);
+
+    if (pickerResult.cancelled === true) {
+      return;
+    }
+    setSelectedImage(pickerResult.uri)
+  }
+
   return (
     <View style={styles.container}>
       <Input
@@ -58,12 +77,13 @@ const RegisterScreen = ({ navigation }) => {
         secureTextEntry
       />
       <Input
-        placeholder="Enter your image url"
+        type="button"
         label="Profile Picture"
         leftIcon={{ type: "material", name: "face" }}
-        value={imageUrl}
-        onChangeText={(text) => setImageUrl(text)}
+        value={selectedImage}
+        
       />
+      <Button title='Pick a photo' style={styles.button} onPress={openImagePickerAsync}/>
 
       <Button title="register" onPress={register} style={styles.button} />
     </View>
